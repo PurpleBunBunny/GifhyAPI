@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Favorite Animes</title>
+    <style type="text/css">
+        button,
+        div,
+        form,
+        input {
+            margin: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Anime Search</h1>
+
+        <!-- Animes will Get Dumped Here -->
+        <div id="animes-view"></div>
+
+        <!-- Rendered Buttons will get Dumped Here  -->
+        <div id="buttons-view"></div>
+
+        <form id="anime-form">
+            <label for="anime-input">Add a Anime!</label>
+            <input type="text" id="anime-input">
+            <br>
+
+            <!-- Button triggers new anime to be added -->
+            <input id="add-anime" type="submit" value="Add a Anime, Yo!">
+        </form>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <script type="text/javascript">
+            // Initial array of animes
+            var animes = ["DragonBall Z", "One Piece Anime", "Naruto", "Pokemon"];
+
+            // displayAnimeInfo function re-renders the HTML to display the appropriate content
+            function displayAnimeInfo() {
+
+                var anime = $(this).attr("data-name");
+
+                var APIkey = "jo1tJfPPCg4rZB1hHKFRAXtDeqpFCyl9";
+
+                var queryURL = "https://api.giphy.com/v1/gifs/search?q=" + anime + "&api_key=" + APIkey + "&limit=10";
+
+                // Creating an AJAX call for the specific anime button being clicked
+                $.ajax({
+                    url: queryURL,
+                    method: "GET"
+                }).then(function (response) {
+
+                    // Storing an array of results in the results variable
+                    var results = response.data;
+
+                    // Looping over every result item
+                    for (var i = 0; i < results.length; i++) {
+
+                        // Only taking action if the photo has an appropriate rating
+                        if (results[i].rating !== "r" && results[i].rating !== "pg-13") {
+                            // Creating a div for the gif
+                            var gifDiv = $("<div>");
+
+                            // Storing the result item's rating
+                            var rating = results[i].rating;
+
+                            // Creating a paragraph tag with the result item's rating
+                            var p = $("<p>").text("Rating: " + rating);
+
+                            // Creating an image tag
+                            var personImage = $("<img>");
+
+                            // Giving the image tag an src attribute of a proprty pulled off the
+                            // result item
+                            personImage.attr("class", "gif");
+                            
+                            personImage.attr("data-state", "still");
+                            personImage.attr("src", results[i].images.original_still.url);
+                            personImage.attr("otherURL", results[i].images.original.url);
+
+                            // Appending the paragraph and personImage we created to the "gifDiv" div we created
+                            gifDiv.append(p);
+                            gifDiv.append(personImage);
+
+                            // Prepending the gifDiv to the "#animes-view" div in the HTML
+                            $("#animes-view").prepend(gifDiv);
+                        }
+
+                    }
+
+                    $(document).on("click", ".gif", function() {
+
+                        
+                        // The attr jQuery method allows us to get or set the value of any attribute on our HTML element
+                        var state = $(this).attr("data-state");
+                        // If the clicked image's state is still, update its src attribute to what its data-animate value is.
+                        // Then, set the image's data-state to animate
+                        // Else set src to the data-still value
+                        if (state === "still") {
+                            var currentURL = $(this).attr("src");
+                            var otherURL = $(this).attr("otherURL");
+                            $(this).attr("src", otherURL);
+                            $(this).attr("data-state", "animate");
+                            $(this).attr("otherURL", currentURL);
+                           
+                        } else {
+                            var currentURL = $(this).attr("src");
+                            var otherURL = $(this).attr("otherURL");
+                            $(this).attr("src", otherURL);
+                            $(this).attr("data-state", "still");
+                            $(this).attr("otherURL", currentURL);
+                        }
+                       
+                    });
+                   
+                });
+
+            }
+
+            // Function for displaying anime data
+            function renderButtons() {
+
+                // Deleting the animes prior to adding new animes
+                // (this is necessary otherwise you will have repeat buttons)
+                $("#buttons-view").empty();
+
+                // Looping through the array of animes
+                for (var i = 0; i < animes.length; i++) {
+
+                    // Then dynamicaly generating buttons for each anime in the array
+                    // This code $("<button>") is all jQuery needs to create the beginning and end tag. (<button></button>)
+                    var a = $("<button>");
+                    // Adding a class of anime-btn to our button
+                    a.addClass("anime-btn");
+                    // Adding a data-attribute
+                    a.attr("data-name", animes[i]);
+                    // Providing the initial button text
+                    a.text(animes[i]);
+                    // Adding the button to the buttons-view div
+                    $("#buttons-view").append(a);
+                }
+            }
+
+            // This function handles events where a anime button is clicked
+            $("#add-anime").on("click", function (event) {
+                event.preventDefault();
+                // This line grabs the input from the textbox
+                var anime = $("#anime-input").val().trim();
+
+                // Adding anime from the textbox to our array
+                animes.push(anime);
+
+                // Calling renderButtons which handles the processing of our anime array
+                renderButtons();
+            });
+
+            // Adding a click event listener to all elements with a class of "anime-btn"
+            $(document).on("click", ".anime-btn", displayAnimeInfo);
+
+            // Calling the renderButtons function to display the intial buttons
+            renderButtons();
+        </script>
+    </div>
+</body>
+
+</html>
